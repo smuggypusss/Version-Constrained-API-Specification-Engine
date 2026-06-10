@@ -1,0 +1,23 @@
+{
+  "_comment": "Architecture rules — defines which calls are forbidden in which decorator contexts.",
+  "rules": [
+    {
+      "id": "NO_WORKFLOW_IN_FASTAPI_ROUTE",
+      "description": "Temporal workflow execution cannot happen directly inside a FastAPI route handler.",
+      "forbidden_call": {
+        "receiver": "workflow",
+        "method": "run"
+      },
+      "forbidden_contexts": ["app.post", "app.get", "app.put", "app.delete", "router.post", "router.get"]
+    },
+    {
+      "id": "NO_SYNC_LLM_IN_ASYNC_ROUTE",
+      "description": "Synchronous LLM calls cannot be made inside async FastAPI route handlers.",
+      "forbidden_call": {
+        "receiver": "litellm",
+        "method": "completion"
+      },
+      "forbidden_contexts": ["app.post", "app.get", "router.post", "router.get"]
+    }
+  ]
+}

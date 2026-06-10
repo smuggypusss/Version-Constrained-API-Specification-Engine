@@ -33,5 +33,9 @@ logs/
 *.sqlite3
 
 
-#test files
+# Test artifacts & caches
+.pytest_cache/
+.coverage
+htmlcov/
+.hypothesis/
 skills/

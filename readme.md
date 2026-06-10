@@ -38,8 +38,8 @@ Currently, the engine provides internal APIs to assemble the System Prompt const
 
 ```python
 # Example Internal Flow (Pseudocode)
-from src.service.resolver import DependencyResolver
-from src.service.spec_builder import SpecBuilder
+from vcase.service.resolver import DependencyResolver
+from vcase.service.spec_builder import SpecBuilder
 
 # 1. Resolve exact versions used in the project
 resolver = DependencyResolver(providers=[PythonProvider(...)])
@@ -61,4 +61,4 @@ print(system_instruction)
 ```
 
 ## Contributing
-When adding a new Ecosystem Provider (e.g., NodeProvider), you must adhere to the asynchronous contract defined in src/providers/base.py. All registry interactions must be defensive and non-blocking.
+When adding a new Ecosystem Provider (e.g., NodeProvider), you must adhere to the asynchronous contract defined in vcase/providers/base.py. All registry interactions must be defensive and non-blocking.

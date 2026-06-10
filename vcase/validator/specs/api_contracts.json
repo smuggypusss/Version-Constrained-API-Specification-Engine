@@ -1,0 +1,12 @@
+{
+  "_comment": "API contract specs — maps 'receiver.method' to its valid kwargs. Populated from resolved ApiIndex objects.",
+  "litellm.completion": {
+    "kwargs": ["model", "messages", "temperature", "max_tokens", "stream", "api_key", "base_url"]
+  },
+  "litellm.acompletion": {
+    "kwargs": ["model", "messages", "temperature", "max_tokens", "stream", "api_key", "base_url"]
+  },
+  "litellm.embedding": {
+    "kwargs": ["model", "input", "api_key"]
+  }
+}
