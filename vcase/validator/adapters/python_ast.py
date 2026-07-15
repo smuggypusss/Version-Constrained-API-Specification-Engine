@@ -34,32 +34,39 @@ class PythonAdapter:
                     filepath=str(filepath),
                     imports=[],
                     calls=[],
+                    aliases={},
                 )
         
+        imports, aliases = self._extract_imports_and_aliases(tree)
         return CodeFileIR(
             filepath=str(filepath),
-            imports=self._extract_imports(tree),
+            imports=imports,
             calls=self._extract_calls(tree),
+            aliases=aliases,
         )
 
-    def _extract_imports(self, tree: ast.Module) -> list[str]:
+    def _extract_imports_and_aliases(self, tree: ast.Module) -> tuple[list[str], dict[str, str]]:
         """
         Walks the AST looking for ast.Import and ast.ImportFrom nodes.
-        Returns a flat list of top-level module names.
-
-        Example:
-            'from litellm import completion' -> ["litellm"]
-            'import httpx'                  -> ["httpx"]
+        Returns a flat list of top-level module names and a dictionary of aliases.
         """
         imports = []
+        aliases = {}
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     imports.append(alias.name)
+                    if alias.asname:
+                        aliases[alias.asname] = alias.name
             elif isinstance(node, ast.ImportFrom):
                 if node.module:
                     imports.append(node.module)
-        return list(set(imports))
+                    for alias in node.names:
+                        if alias.asname:
+                            aliases[alias.asname] = f"{node.module}.{alias.name}"
+                        else:
+                            aliases[alias.name] = f"{node.module}.{alias.name}"
+        return list(set(imports)), aliases
 
     def _extract_calls(self, tree: ast.Module) -> list[CallIR]:
         """

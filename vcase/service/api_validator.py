@@ -34,7 +34,8 @@ class ApiValidator:
         self,
         generated_code: str,
         api_indexes: list[ApiIndex],
-        extra_whitelisted_imports: list[str] | None = None
+        extra_whitelisted_imports: list[str] | None = None,
+        resolved_dep_names: list[str] | None = None
     ) -> ValidationResult:
         cleaned_code = self._clean_code(generated_code)
         if not cleaned_code.strip():
@@ -95,7 +96,11 @@ class ApiValidator:
                         api_contracts[key] = contract
 
             # Instantiate and run RuleEngine
-            resolved_dep_names = [index.package for index in api_indexes]
+            if resolved_dep_names is None:
+                resolved_dep_names = [index.package for index in api_indexes]
+            else:
+                resolved_dep_names = list(resolved_dep_names)
+
             # Include submodules and alternate namings for standard imports (e.g. temporalio vs workflow client)
             # Add package names
             for name in list(resolved_dep_names):

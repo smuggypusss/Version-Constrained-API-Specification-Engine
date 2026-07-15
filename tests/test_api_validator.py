@@ -124,3 +124,84 @@ class TestApiValidator:
         result = validator.validate(code, api_indexes)
         assert result.passed is True
         assert len(result.violations) == 0
+
+    def test_excludes_standard_library_imports_and_calls(self) -> None:
+        validator = ApiValidator()
+        code = "import json\nimport sys\njson.dumps({'a': 1})\nsys.exit(0)"
+        result = validator.validate(code, [], resolved_dep_names=[])
+        assert result.passed is True
+        assert len(result.violations) == 0
+
+    def test_resolves_aliased_module_imports(self) -> None:
+        validator = ApiValidator()
+        code = "import litellm as llm\nllm.completion(model='gpt-4o')"
+        api_indexes = [
+            ApiIndex(
+                package="litellm",
+                version="1.40.0",
+                signatures=(
+                    ApiSignature(
+                        qualified_name="litellm.completion",
+                        parameters=(
+                            ApiParameter(name="model", type_hint="str", required=True, description=""),
+                        ),
+                        return_type="ModelResponse",
+                        available_since="",
+                        deprecated=False
+                    ),
+                )
+            )
+        ]
+        result = validator.validate(code, api_indexes, resolved_dep_names=["litellm"])
+        assert result.passed is True
+        assert len(result.violations) == 0
+
+    def test_resolves_aliased_from_imports(self) -> None:
+        validator = ApiValidator()
+        code = "from litellm import completion as comp\ncomp(model='gpt-4o')"
+        api_indexes = [
+            ApiIndex(
+                package="litellm",
+                version="1.40.0",
+                signatures=(
+                    ApiSignature(
+                        qualified_name="litellm.completion",
+                        parameters=(
+                            ApiParameter(name="model", type_hint="str", required=True, description=""),
+                        ),
+                        return_type="ModelResponse",
+                        available_since="",
+                        deprecated=False
+                    ),
+                )
+            )
+        ]
+        result = validator.validate(code, api_indexes, resolved_dep_names=["litellm"])
+        assert result.passed is True
+        assert len(result.violations) == 0
+
+    def test_passes_non_dependency_local_receivers(self) -> None:
+        validator = ApiValidator()
+        # 'logger' is not a known dependency package or standard library receiver, so logger.info should be ignored (no false positive for api-unknown)
+        code = "logger.info('hello')"
+        result = validator.validate(code, [], resolved_dep_names=[])
+        assert result.passed is True
+        assert len(result.violations) == 0
+
+    def test_validates_transitive_dependency_imports(self) -> None:
+        from unittest.mock import patch
+        validator = ApiValidator()
+        # Let's say my_dep imports another_dep transitively, so importing another_dep is valid.
+        code = "import another_dep"
+        
+        # Mock importlib.metadata.requires to return dependencies for my_dep
+        with patch("importlib.metadata.requires") as mock_requires:
+            def side_effect(pkg):
+                if pkg == "my_dep":
+                    return ["another_dep>=1.0.0"]
+                return None
+            mock_requires.side_effect = side_effect
+            
+            result = validator.validate(code, [], resolved_dep_names=["my_dep"])
+            assert result.passed is True
+            assert len(result.violations) == 0

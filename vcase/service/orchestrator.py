@@ -120,7 +120,10 @@ class Orchestrator:
             generated_code = await self._call_llm(system_prompt, prompt_context)
 
             # Validate generated code
-            api_res = self._api_validator.validate(generated_code, api_indexes, extra_whitelisted_imports=local_modules)
+            api_res = self._api_validator.validate(
+                generated_code, api_indexes, extra_whitelisted_imports=local_modules,
+                resolved_dep_names=[dep.name for dep in resolved_deps]
+            )
             arch_res = self._architecture_validator.validate(generated_code, patterns, constraints)
 
             violations = api_res.violations + arch_res.violations

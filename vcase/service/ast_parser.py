@@ -179,6 +179,28 @@ class _SignatureVisitor(ast.NodeVisitor):
         if node.name.startswith("_"):
             self.generic_visit(node)
             return
+
+        # Find __init__ method to get constructor parameters
+        init_node = None
+        for child in node.body:
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)) and child.name == "__init__":
+                init_node = child
+                break
+
+        qualified_name = ".".join(self._scope_stack + [node.name])
+        parameters = ()
+        if init_node:
+            parameters = self._parser._extract_parameters(init_node)
+
+        self.signatures.append(ApiSignature(
+            qualified_name=qualified_name,
+            parameters=parameters,
+            return_type=node.name,
+            available_since="",
+            deprecated=False,
+            deprecation_note=""
+        ))
+
         self._scope_stack.append(node.name)
         self.generic_visit(node)
         self._scope_stack.pop()

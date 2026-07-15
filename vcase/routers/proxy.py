@@ -213,7 +213,8 @@ async def validate_code(request: ValidateRequest) -> ValidateResponse:
 
         # 5. Validate
         api_res = orchestrator._api_validator.validate(
-            request.code, api_indexes, extra_whitelisted_imports=local_modules
+            request.code, api_indexes, extra_whitelisted_imports=local_modules,
+            resolved_dep_names=[dep.name for dep in resolved_deps]
         )
         arch_res = orchestrator._architecture_validator.validate(
             request.code, patterns, constraints

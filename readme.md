@@ -12,6 +12,18 @@ This engine replaces static RAG with a **five-layer defense system**. It dynamic
 - **Architectural Guardrails:** Enforces complex interaction patterns (e.g., "Temporal workflows cannot be executed directly inside FastAPI route handlers").
 - **Language Agnostic Architecture:** Built on a provider interface allowing expansion beyond Python to Node, Rust, Go, etc.
 
+## Installation
+
+Install VCASE directly in your local environment:
+```bash
+# For development/editable mode:
+pip install -e .
+
+# Or standard install:
+pip install .
+```
+This installs the package and registers the `vcase` executable globally.
+
 ## Resolution Architecture
 
 The engine uses a strict **Tiered Fallback Strategy** to guarantee dependency accuracy before building the specification:
@@ -54,10 +66,16 @@ system_instruction = builder.build_system_prompt(api_indexes, patterns)
 
 print(system_instruction) 
 # Outputs: 
-# ## litellm 1.40.0
-# - completion(model: str, messages: list) -> ModelResponse
-# ⚠ PATTERN: fastapi + temporalio
-# Rule [NO_WORKFLOW_IN_HANDLER]: Workflows must run in workers.
+# ## litellm@1.40.0
+# - litellm.completion(model:str,messages:list) -> ModelResponse
+# 
+# Pattern: fastapi + temporalio
+# Description: Workflows must run in workers.
+# Correct Pattern: Run workflows in workers or separate processes.
+# Incorrect Pattern: Do not execute workflows directly inside route handlers.
+# Disallowed In: app.post, app.get
+# Allowed In: workers, scripts
+# Rule Name: [NO_WORKFLOW_IN_HANDLER]: Temporal workflows cannot run in FastAPI handlers
 ```
 
 ## Contributing

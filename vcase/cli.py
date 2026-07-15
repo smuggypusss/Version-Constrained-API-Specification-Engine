@@ -45,6 +45,12 @@ def main() -> None:
     validate_parser.add_argument("--code-file", required=True, help="Path to Python file containing code to validate")
     validate_parser.add_argument("--repo-path", required=True, help="Path to local repository")
 
+    # mcp command
+    mcp_parser = subparsers.add_parser("mcp", help="Start the VCASE Model Context Protocol (MCP) server")
+    mcp_parser.add_argument("--transport", choices=["stdio", "sse"], default="stdio", help="MCP transport protocol")
+    mcp_parser.add_argument("--host", default="127.0.0.1", help="Host address for SSE server")
+    mcp_parser.add_argument("--port", type=int, default=8012, help="Port for SSE server")
+
     args = parser.parse_args()
 
     if args.command == "serve":
@@ -170,7 +176,8 @@ def main() -> None:
                         constraints.extend(get_constraints_for(tech))
 
                     api_res = orchestrator._api_validator.validate(
-                        code, api_indexes, extra_whitelisted_imports=local_modules
+                        code, api_indexes, extra_whitelisted_imports=local_modules,
+                        resolved_dep_names=[dep.name for dep in resolved_deps]
                     )
                     arch_res = orchestrator._architecture_validator.validate(
                         code, patterns, constraints
@@ -192,6 +199,19 @@ def main() -> None:
                     sys.exit(3)
 
         asyncio.run(run_validation())
+
+    elif args.command == "mcp":
+        print(f"Starting VCASE MCP server (transport={args.transport})...")
+        from vcase.mcp import mcp as mcp_server
+        
+        if args.transport == "stdio":
+            mcp_server.run(transport="stdio")
+        elif args.transport == "sse":
+            mcp_server.settings.host = args.host
+            mcp_server.settings.port = args.port
+            print(f"SSE Server listening on http://{args.host}:{args.port}")
+            mcp_server.run(transport="sse")
+
 
 
 if __name__ == "__main__":

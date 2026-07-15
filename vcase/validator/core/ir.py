@@ -35,3 +35,4 @@ class CodeFileIR:
     filepath: str
     imports: list[str] = field(default_factory=list)
     calls: list[CallIR] = field(default_factory=list)
+    aliases: dict[str, str] = field(default_factory=dict)
