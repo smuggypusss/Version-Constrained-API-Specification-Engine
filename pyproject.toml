@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vcase-auto-context"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
     { name = "Aryan Kankheria", email = "aryankankheria331@gmail.com" }
 ]
