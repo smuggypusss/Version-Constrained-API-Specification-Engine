@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vcase-auto-context"
+version = "0.1.1"
+authors = [
+    { name = "Aryan Kankheria", email = "aryankankheria331@gmail.com" }
+]
+description = "Version-Constrained API Specification Engine (VCASE)"
+readme = "readme.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.6",
+    "httpx>=0.27.2",
+    "pydantic>=2.9.2",
+    "pydantic-settings>=2.5.2",
+    "cachetools>=5.5.0",
+    "python-dotenv>=1.0.1",
+    "mcp>=0.1.0",
+]
+
+[project.scripts]
+vcase = "vcase.cli:main"
+
+[tool.setuptools]
+packages = ["vcase", "vcase.api", "vcase.providers", "vcase.routers", "vcase.service", "vcase.validator", "vcase.validator.adapters", "vcase.validator.core", "vcase.validator.specs"]
+
+[tool.setuptools.package-data]
+vcase = ["validator/specs/*.json"]
