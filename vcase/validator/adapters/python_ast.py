@@ -168,6 +168,9 @@ class _CallExtractor(ast.NodeVisitor):
         if isinstance(node, ast.Name):
             return node.id
         elif isinstance(node, ast.Attribute):
-            return self._get_receiver_name(node.value)
+            base = self._get_receiver_name(node.value)
+            if base:
+                return f"{base}.{node.attr}"
+            return None
         else:
             return None

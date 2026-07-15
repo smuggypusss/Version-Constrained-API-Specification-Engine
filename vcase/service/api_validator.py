@@ -129,8 +129,32 @@ class ApiValidator:
 
             # Additional check for deprecated APIs
             for imp in ir.calls:
-                key = f"{imp.receiver}.{imp.method}" if imp.receiver else imp.method
-                for k in (key, imp.method):
+                receiver = imp.receiver
+                method = imp.method
+                if receiver and hasattr(ir, "aliases") and receiver in ir.aliases:
+                    receiver = ir.aliases[receiver]
+                elif not receiver and hasattr(ir, "aliases") and method in ir.aliases:
+                    resolved = ir.aliases[method]
+                    if "." in resolved:
+                        receiver, method = resolved.rsplit(".", 1)
+                    else:
+                        receiver = None
+                        method = resolved
+
+                key = f"{receiver}.{method}" if receiver else method
+                resolved_key = key
+                if receiver and key not in api_contracts:
+                    rec_parts = receiver.split('.')
+                    rec_last = rec_parts[-1]
+                    target_suffix = f".{rec_last}.{method}"
+                    top_pkg = rec_parts[0]
+                    for contract_key in api_contracts:
+                        if contract_key.startswith(top_pkg) and contract_key.endswith(target_suffix):
+                            resolved_key = contract_key
+                            break
+
+                check_keys = [resolved_key] if receiver else [method]
+                for k in check_keys:
                     if k in api_contracts and api_contracts[k].get("deprecated"):
                         violations.append(ValidationViolation(
                             rule_name="api-deprecated",

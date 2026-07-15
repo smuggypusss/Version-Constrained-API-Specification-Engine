@@ -190,7 +190,18 @@ class RuleEngine:
                 continue
 
             key = f"{receiver}.{method}" if receiver else method
-            if key not in self._api_contracts:
+            resolved_key = key
+            if receiver and key not in self._api_contracts:
+                rec_parts = receiver.split('.')
+                rec_last = rec_parts[-1]
+                target_suffix = f".{rec_last}.{method}"
+                top_pkg = rec_parts[0]
+                for contract_key in self._api_contracts:
+                    if contract_key.startswith(top_pkg) and contract_key.endswith(target_suffix):
+                        resolved_key = contract_key
+                        break
+
+            if resolved_key not in self._api_contracts:
                 # If there's a receiver, check if it's a known dependency package.
                 # If it's not a known dependency package, we skip checking it to avoid false positives on local variables.
                 if receiver:
@@ -204,7 +215,7 @@ class RuleEngine:
                         context=ir.filepath
                     ))
             else:
-                spec = self._api_contracts[key]
+                spec = self._api_contracts[resolved_key]
                 allowed_kwargs = spec["kwargs"]
                 invalid = set(imp.kwargs) - set(allowed_kwargs)
                 for bad_kwargs in invalid:
